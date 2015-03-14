@@ -1,0 +1,29 @@
+{
+  "name": "kalabox-services-kalabox",
+  "description": "Default Kalabox startup services.",
+  "keywords": [
+    "docker",
+    "kalabox",
+    "drupal",
+    "wordpress"
+  ],
+  "preferGlobal": true,
+  "version": "0.3.0",
+  "main": "kalabox.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kalabox/kalabox-services-kalabox"
+  },
+  "bugs": {
+    "email": "mike@kalamuna.com",
+    "url": "http://github.com/kalabox/kalabox-issues"
+  },
+  "dependencies": {
+    "async": "^0.9.0",
+    "lodash": "~2.4.1",
+    "mkdirp": "^0.5.0",
+    "redis": "~0.12.1"
+  },
+  "devDependencies": {
+  }
+}
