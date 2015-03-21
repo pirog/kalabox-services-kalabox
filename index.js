@@ -3,7 +3,7 @@
 var redis = require('redis');
 var async = require('async');
 
-module.exports = function(kbox, app) {
+module.exports = function(kbox) {
   var engine = kbox.engine;
   var events = kbox.core.events;
   var globalConfig = kbox.core.config.getGlobalConfig();
@@ -21,7 +21,7 @@ module.exports = function(kbox, app) {
         var redisHost = kbox.core.deps.lookup('engineConfig').host;
         async.map(component.proxy, function(proxy, next) {
           var client = redis.createClient(redisPort, redisHost);
-          var hostname = proxy.default ? app.domain : component.hostname;
+          var hostname = proxy.default ? component.appDomain : component.hostname;
           var rkey = 'frontend:' + hostname;
           if (data && data.NetworkSettings.Ports[proxy.port]) {
             var port = data.NetworkSettings.Ports[proxy.port][0].HostPort;
@@ -69,7 +69,7 @@ module.exports = function(kbox, app) {
         for (var x in component.proxy) {
           var proxy = component.proxy[x];
           var client = redis.createClient(redisPort, redisHost);
-          var hostname = proxy.default ? app.domain : component.hostname;
+          var hostname = proxy.default ? component.appDomain : component.hostname;
           var rkey = 'frontend:' + hostname;
 
           var debugState = {
