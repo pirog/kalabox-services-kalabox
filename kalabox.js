@@ -54,7 +54,9 @@ module.exports = function(kbox) {
               throw err;
             }
             if (container) {
-              logDebug('SERVICES => Install options.', container, installOptions);
+              logDebug(
+                'SERVICES => Install options.', container, installOptions
+              );
               fs.writeFileSync(cidFile, container.cid);
               callback(err);
             }
