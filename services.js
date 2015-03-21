@@ -10,7 +10,6 @@
 var _ = require('lodash');
 var path = require('path');
 var fs = require('fs');
-var self = this;
 
 module.exports = function(kbox) {
 
@@ -179,7 +178,7 @@ module.exports = function(kbox) {
     var opts = getProperty(service, 'createOpts');
     opts.Image = service.name;
     if (service.postProviderOpts) {
-      var extraOpts = self[service.postProviderOpts]().createOpts;
+      var extraOpts = api[service.postProviderOpts]().createOpts;
       _.merge(opts, extraOpts);
     }
     return opts;
@@ -230,7 +229,7 @@ module.exports = function(kbox) {
     return _.flatten(list);
   };
 
-  return {
+  var api = {
     getCid: getCid,
     getCidFile: getCidFile,
     getCidRoot: getCidRoot,
@@ -243,5 +242,7 @@ module.exports = function(kbox) {
     getStartOptions: getStartOptions,
     getStartableServices: getStartableServices
   };
+
+  return api;
 
 };
