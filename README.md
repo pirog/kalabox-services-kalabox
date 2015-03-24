@@ -1,6 +1,10 @@
 # Kalabox Services Kalabox
 
-TODO!
+This is the core set of services needed to support Kalabox apps using the Docker engine.
+
+Services are any additional containers that are needed to support apps. This could be something like an nginx reverse proxy or dnsmasq or both. Different services backends can be swapped out in the global config using the services key.
+
+Currently Kalabox implements a set of services called "Kalabox" that are used to support our docker based apps. Specifically we are using hipache as a reverse proxy, dnsmasq to handle requests to .kbox domains, skydock to troll the docker events stream for starts and stops and skydns to handle intra-docker dns resolution.
 
 ## Other Resources
 
