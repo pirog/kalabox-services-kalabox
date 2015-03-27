@@ -6,10 +6,19 @@ module.exports = function(kbox) {
 
   return {
     dns: {
-      darwin: '/etc/resolver/' + deps.lookup('globalConfig').domain,
+      darwin: {
+        path: '/etc/resolver',
+        file: deps.lookup('globalConfig').domain,
+      },
       linux: {
-        debian: '/etc/resolvconf/resolv.conf.d/head',
-        other: '/etc/resolv.conf'
+        debian: {
+          path: '/etc/resolvconf/resolv.conf.d',
+          file: 'head'
+        },
+        other: {
+          path: '/etc',
+          file: 'resolv.conf'
+        }
       }
     }
   }

@@ -24,16 +24,17 @@ module.exports = function(kbox) {
   kbox.install.registerStep(function(step) {
     step.name = 'install-dns';
     step.description  = 'Setting up DNS.';
-    step.deps = [];
+    step.deps = ['is-dns-set'];
     step.subscribes = ['run-admin-commands'];
     step.all.darwin = function(state, done) {
       if (!state.dnsIsSet) {
         state.log('Setting up DNS for Kalabox.');
         provider.getServerIps(function(ips) {
           var ipCmds = kbox.install.cmd.buildDnsCmd(
-            ips, [meta.dns.darwin]
+            ips, [meta.dns.darwin.path, meta.dns.darwin.file]
           );
-          state.adminCommands.concat(ipCmds);
+          var cmd = ipCmds.join(' && ');
+          state.adminCommands.push(cmd);
           done();
         });
       }
