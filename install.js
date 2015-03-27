@@ -49,7 +49,7 @@ module.exports = function(kbox) {
     step.name = 'is-dns-set';
     step.description = 'Check if dns is set.';
     step.deps = ['boot2docker-profile'];
-    step.all.darwin = function(state, done) {
+    step.all.darwin = function(state) {
       state.log('Checking if DNS is set.');
       state.dnsIsSet = fs.existsSync(path.join(
           meta.dns.darwin.path,
@@ -58,7 +58,6 @@ module.exports = function(kbox) {
       );
       var msg = state.dnsIsSet ? 'is set.' : 'is not set.';
       state.log('DNS ' + msg);
-      done();
     };
     step.all.linux = function(state, done) {
       provider.getServerIps(function(ips) {
@@ -98,9 +97,11 @@ module.exports = function(kbox) {
           state.adminCommands.push(cmd);
           done();
         });
+      } else {
+        done();
       }
     };
-    step.all.linux = function(state, done) {
+    step.all.linux = function(state) {
       if (!state.dnsIsSet) {
         state.log('Setting up DNS for Kalabox.');
         var flavor = kbox.install.linuxOsInfo.getFlavor();
@@ -108,7 +109,6 @@ module.exports = function(kbox) {
           state.adminCommands.push('apt-get install resolvconf -y');
         }
       }
-      done();
     };
   });
 
@@ -160,6 +160,8 @@ module.exports = function(kbox) {
             state.log(data);
           });
         }
+      } else {
+        done();
       }
     };
     step.all.win32 = function(state, done) {
@@ -204,6 +206,8 @@ module.exports = function(kbox) {
     };
     step.all.darwin = function(state, done) {
       if (!state.dnsIsSet) {
+        done();
+      } else {
         done();
       }
     };
