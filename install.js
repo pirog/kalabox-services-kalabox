@@ -160,6 +160,9 @@ module.exports = function(kbox) {
     step.all.darwin = function(state, done) {
       done();
     };
+    step.all.win32 = function(state, done) {
+      done();
+    };
   });
 
 };
