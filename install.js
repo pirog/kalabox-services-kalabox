@@ -13,7 +13,7 @@ module.exports = function(kbox) {
   var KALABOX_DNS_OPTIONS = [];
 
   var dnsInfo = [];
-  function getCurrentDNSOptions(callback) {
+  function getLinuxDNSOptions(callback) {
     if (!_.isEmpty(dnsInfo)) {
       callback(dnsInfo);
     }
@@ -62,7 +62,7 @@ module.exports = function(kbox) {
     };
     step.all.linux = function(state, done) {
       provider.getServerIps(function(ips) {
-        getCurrentDNSOptions(function(options) {
+        getLinuxDNSOptions(function(options) {
           _.forEach(ips, function(ip) {
             if (!_.contains(options, ip)) {
               KALABOX_DNS_OPTIONS.push('nameserver ' + ip);
@@ -74,6 +74,11 @@ module.exports = function(kbox) {
           done();
         });
       });
+    };
+    step.all.win32 = function(state, done) {
+      // @todo: actually do a check of some kind?
+      state.dnsIsSet = false;
+      done();
     };
   });
 
@@ -127,10 +132,10 @@ module.exports = function(kbox) {
 
   // Install dns
   // @todo: really wish we could figure out how to do this as part of normal
-  // admin install step
+  // admin install step or at least something that only shows on windows
   kbox.install.registerStep(function(step) {
-    step.name = 'install-dns';
-    step.description = 'Setting DNS';
+    step.name = 'finalize-services';
+    step.description = 'Finalizing Services';
     step.deps = ['kalabox-services-kalabox'];
     step.all.linux = function(state, done) {
       if (!state.dnsIsSet) {
@@ -157,11 +162,50 @@ module.exports = function(kbox) {
         }
       }
     };
-    step.all.darwin = function(state, done) {
-      done();
-    };
     step.all.win32 = function(state, done) {
-      done();
+      kbox.core.deps.call(function(shell) {
+        var nic = '"C:\\Program Files\\Oracle\\VirtualBox\\VBoxManage.exe" ' +
+          'showvminfo "Kalabox2" | findstr "Host-only"';
+        shell.exec(nic, function(err, output) {
+          if (err) {
+            done(err);
+          }
+          else {
+            var start = output.indexOf('\'');
+            var last = output.lastIndexOf('\'');
+            var adapter = [
+              output.slice(start + 1, last).replace(
+                'Ethernet Adapter',
+                'Network'
+              )
+            ];
+            state.log(adapter);
+            provider.getServerIps(function(ips) {
+              var ipCmds = kbox.install.cmd.buildDnsCmd(
+                ips, adapter
+              );
+              console.log(ipCmds);
+              var child = kbox.install.cmd.runCmdsAsync(ipCmds);
+              child.stderr.on('data', function(data) {
+                state.log(data);
+                done(data);
+              });
+              child.stdout.on('data', function(data) {
+                state.log(data);
+              });
+              child.on('exit', function(code) {
+                state.log('Install completed with code ' + code);
+                done();
+              });
+            });
+          }
+        });
+      });
+    };
+    step.all.darwin = function(state, done) {
+      if (!state.dnsIsSet) {
+        done();
+      }
     };
   });
 
