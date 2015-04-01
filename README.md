@@ -6,7 +6,7 @@ Services are any additional containers that are needed to support apps. This cou
 
 Currently Kalabox implements a set of services called "Kalabox" that are used to support our docker based apps. Specifically we are using hipache as a reverse proxy, dnsmasq to handle requests to .kbox domains, skydock to troll the docker events stream for starts and stops and skydns to handle intra-docker dns resolution.
 
-## Other Resources
+## Other Resourcesz
 
 * [API docs](http://api.kalabox.me/)
 * [Test coverage reports](http://coverage.kalabox.me/)
