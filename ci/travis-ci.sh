@@ -65,7 +65,7 @@ after-success() {
     [ $TRAVIS_REPO_SLUG == $PLUGIN_REPO ]; then
 
     # Only do our stuff on the latest node version
-    if ([ $TRAVIS_NODE_VERSION == '0.12']); then
+    if [ $TRAVIS_NODE_VERSION == "0.12" ] ; then
       # DO VERSION BUMPING FOR KALABOX/KALABOX
       COMMIT_MESSAGE=$(git log --format=%B -n 1)
       BUILD_VERSION=$(node -pe 'JSON.parse(process.argv[1]).version' "$(cat $TRAVIS_BUILD_DIR/package.json)")
