@@ -33,18 +33,7 @@
     "jshint-stylish": "~1.0.0",
     "matchdep": "^0.3.0"
   },
-  "gitHead": "9f8268149009113c16170e1273a46a5f874b116a",
   "homepage": "https://github.com/kalabox/kalabox-services-kalabox",
-  "_id": "kalabox-services-kalabox@0.3.1",
-  "scripts": {},
-  "_shasum": "c28d432fa4e7d35c079379c3b99a7bca9471a844",
-  "_from": "kalabox-services-kalabox@*",
-  "_npmVersion": "2.7.1",
-  "_nodeVersion": "0.10.37",
-  "_npmUser": {
-    "name": "pirog",
-    "email": "mike@kalamuna.com"
-  },
   "maintainers": [
     {
       "name": "pirog",
