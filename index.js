@@ -2,7 +2,8 @@
 
 module.exports = function(kbox) {
 
-  require('./install.js')(kbox);
-  require('./events.js')(kbox);
+  require('./lib/events.js')(kbox);
+  require('./lib/install.js')(kbox);
+  require('./lib/updates.js')(kbox);
 
 };

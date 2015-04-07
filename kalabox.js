@@ -17,7 +17,7 @@ module.exports = function(kbox) {
   var util = kbox.util;
   var helpers = util.helpers;
   var engine = kbox.engine;
-  var serviceInfo = require('./services.js')(kbox);
+  var serviceInfo = require('./lib/services.js')(kbox);
 
   var logDebug = core.log.debug;
   var logInfo = core.log.info;
