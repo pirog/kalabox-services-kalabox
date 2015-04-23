@@ -7,7 +7,7 @@
     "drupal",
     "wordpress"
   ],
-  "version": "0.6.7",
+  "version": "0.6.8",
   "main": "kalabox.js",
   "repository": {
     "type": "git",
