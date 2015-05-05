@@ -10,12 +10,9 @@ VOLUME ["/var/lib/redis"]
 
 RUN \
   apt-get update -y && \
-  curl -sL https://deb.nodesource.com/setup | bash - && \
+  curl -sL https://deb.nodesource.com/setup_0.12 | bash - && \
   apt-get install -y supervisor nodejs npm redis-server && \
-  mkdir ./hipache && \
-  curl -L https://github.com/kalabox/hipache/archive/0.3.1.tar.gz > /tmp/hipache.tar.gz && \
-  tar -xzvf /tmp/hipache.tar.gz --strip-components=1 -C ./hipache && \
-  npm install --prefix=/usr/local -g ./hipache --production && \
+  npm install --prefix=/usr/local -g https://github.com/kalabox/hipache/tarball/0.3.1-2 --production && \
   mkdir -p /var/log/hipache && \
   rm -rf /tmp/*
 
