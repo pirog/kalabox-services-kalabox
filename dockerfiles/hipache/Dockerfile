@@ -14,7 +14,11 @@ RUN \
   apt-get install -y supervisor nodejs npm redis-server && \
   npm install --prefix=/usr/local -g https://github.com/kalabox/hipache/tarball/0.3.1-2 --production && \
   mkdir -p /var/log/hipache && \
-  rm -rf /tmp/*
+  rm -rf /tmp/* && \
+  apt-get clean -y && \
+  apt-get autoclean -y && \
+  apt-get autoremove -y && \
+  rm -rf /var/lib/{apt,dpkg,cache,log}/
 
 COPY ./config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY ./config/redis.conf /src/redis/redis.conf

@@ -7,10 +7,15 @@ FROM kalabox/debian:stable
 COPY start.sh /root/start.sh
 
 RUN \
-  apt-get install -y dnsmasq && apt-get clean && \
+  apt-get update -y && \
+  apt-get install -y dnsmasq && \
   echo 'user=root' >> /etc/dnsmasq.conf && \
   echo 'address=/KALABOX_DOMAIN/KALABOX_IP' >> /etc/dnsmasq.conf && \
-  chmod 777 /root/start.sh
+  chmod 777 /root/start.sh && \
+  apt-get clean -y && \
+  apt-get autoclean -y && \
+  apt-get autoremove -y && \
+  rm -rf /var/lib/{apt,dpkg,cache,log}/
 
 EXPOSE 53
 
