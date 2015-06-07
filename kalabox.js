@@ -42,9 +42,9 @@ module.exports = function(kbox) {
     })
     // Wrap errors.
     .catch(function(err) {
-      throw new VError(err, 'Failed to initialize services info.');  
+      throw new VError(err, 'Failed to initialize services info.');
     });
-    
+
   });
 
   /*
@@ -121,7 +121,7 @@ module.exports = function(kbox) {
     .catch(function(err) {
       throw new VError(err, 'Error starting service "%s".', pp(service));
     });
-    
+
   };
 
   /*
@@ -143,14 +143,14 @@ module.exports = function(kbox) {
     .catch(function(err) {
       throw new VError(err, 'Error stopping service "%s".', service);
     });
-    
+
   };
 
   /*
    * Start all startable services.
    */
   var start = function() {
-    
+
     // Get service info.
     return serviceInfo()
     // Get startable services.
@@ -191,7 +191,7 @@ module.exports = function(kbox) {
     .catch(function(err) {
       throw new VError(err, 'Error stopping services.');
     });
-    
+
   };
 
   /*
@@ -265,7 +265,7 @@ module.exports = function(kbox) {
       if (notRunningServices.length > 0) {
         return rebootServices();
       }
-    );
+    });
 
   };
 
