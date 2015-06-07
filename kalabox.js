@@ -5,152 +5,268 @@
  * @module kbox
  */
 
+var _ = require('lodash');
+var Promise = require('bluebird');
+Promise.longStackTraces();
 var path = require('path');
 var fs = require('fs');
 var mkdirp = require('mkdirp');
+var VError = require('verror');
+var pp = require('util').inspect;
 
 module.exports = function(kbox) {
 
   var self = this;
 
-  var core = kbox.core;
-  var util = kbox.util;
-  var helpers = util.helpers;
-  var engine = kbox.engine;
-  var serviceInfo = require('./lib/services.js')(kbox);
+  /*
+   * Logging functions.
+   */
+  var log = kbox.core.log.make('SERVICES');
 
-  var logDebug = core.log.debug;
-  var logInfo = core.log.info;
+  /*
+   * Initialize events and tasks.
+   */
+  Promise.try(require, './index.js')
+  // Wrap errors.
+  .catch(function(err) {
+    throw new VError(err, 'Failed to init services plugin tasks and events.');
+  });
 
-  core.deps.call(require('./index.js'));
+  /*
+   * Load services info module.
+   */
+  var serviceInfo = _.once(function() {
+    // Load services module.
+    return Promise.try(function() {
+      return require('./lib/services.js')(kbox);
+    })
+    // Wrap errors.
+    .catch(function(err) {
+      throw new VError(err, 'Failed to initialize services info.');  
+    });
+    
+  });
 
-  var isNotRunning = function(service, callback) {
-    var cid = serviceInfo.getCid(service);
-    if (cid !== false) {
-      engine.inspect(cid, function(err, data) {
-        if (err) {
-          callback(err, false);
-        }
-        else {
-          callback(null, !data.State.Running);
-        }
-      });
-    }
-    else {
-      callback(null, false);
-    }
+  /*
+   * Query engine to find out running status of service.
+   */
+  var isServiceRunning = function(service) {
+
+    // Get service info.
+    return serviceInfo()
+    // Get cid of service.
+    .then(function(serviceInfo) {
+      return serviceInfo.getCid(service);
+    })
+    // Query engine to find out running status of service.
+    .then(function(cid) {
+      return kbox.engine.isRunning(cid);
+    });
+
   };
 
-  var installService = function(service, callback) {
-    engine.build(service, function(err) {
-      if (err) {
-        callback(err);
-      } else {
-        if (service.createOpts) {
-          var cidFile = serviceInfo.getCidFile(service);
-          var installOptions = serviceInfo.getInstallOptions(service);
-          engine.create(installOptions, function(err, container) {
-            if (err) {
-              throw err;
-            }
-            if (container) {
-              logDebug(
-                'SERVICES => Install options.', container, installOptions
-              );
-              fs.writeFileSync(cidFile, container.cid);
-              callback(err);
-            }
+  /*
+   * Install a service.
+   */
+  var installService = function(service) {
+
+    // Build service.
+    return kbox.engine.build(service)
+    // Get service info.
+    .then(function() {
+      return serviceInfo();
+    })
+    // Create service.
+    .then(function(serviceInfo) {
+      if (service.createOpts) {
+        // Get install options.
+        var installOpts = serviceInfo.getInstallOptions(service);
+        // Create service.
+        return kbox.engine.create(installOpts)
+        // Write service's cid file.
+        .then(function(container) {
+          return Promise.fromNode(function(cb) {
+            var filepath = serviceInfo.getCidFile(service);
+            fs.writeFile(filepath, container.cid, cb);
           });
-        }
-        else {
-          callback(null);
-        }
+        });
       }
+    })
+    // Wrap errors.
+    .catch(function(err) {
+      throw new VError(err, 'Error installing service "%s".', service);
     });
+
   };
 
-  var startService = function(service, callback) {
-    var opts = serviceInfo.getStartOptions(service);
-    var cid = serviceInfo.getCid(service);
-    engine.start(cid, opts, function(err) {
-      callback(err);
+  /*
+   * Start a service.
+   */
+  var startService = function(service) {
+
+    // Get service info.
+    return serviceInfo()
+    // Bind empty object.
+    .bind({})
+    // Get service info and cid.
+    .then(function(serviceInfo) {
+      this.startOpts = serviceInfo.getStartOptions(service);
+      this.cid = serviceInfo.getCid(service);
+    })
+    // Start service.
+    .then(function() {
+      return kbox.engine.start(this.cid, this.startOpts);
+    })
+    // Wrap errors.
+    .catch(function(err) {
+      throw new VError(err, 'Error starting service "%s".', pp(service));
     });
+    
   };
 
-  var stopService = function(service, callback) {
-    var cid = serviceInfo.getCid(service);
-    engine.stop(cid, function(err) {
-      callback(err);
+  /*
+   * Stop a service.
+   */
+  var stopService = function(service) {
+
+    // Get service info.
+    return serviceInfo()
+    // Get cid.
+    .then(function(serviceInfo) {
+      return serviceInfo.getCid(service);
+    })
+    // Stop service.
+    .then(function(cid) {
+      return kbox.engine.stop(cid);
+    })
+    // Wrap errors.
+    .catch(function(err) {
+      throw new VError(err, 'Error stopping service "%s".', service);
     });
+    
   };
 
-  var start = function(callback) {
-    helpers.mapAsync(
-      serviceInfo.getStartableServices(),
-      function(service, done) {
-        startService(service, done);
-      },
-      function(errs) {
-        callback(errs);
-      }
-    );
+  /*
+   * Start all startable services.
+   */
+  var start = function() {
+    
+    // Get service info.
+    return serviceInfo()
+    // Get startable services.
+    .then(function(serviceInfo) {
+      return serviceInfo.getStartableServices();
+    })
+    // Start services.
+    // @todo: @bcauldwell - This should be a map all so an error doesn't
+    // stop any of the services from starting.
+    .map(function(service) {
+      return startService(service);
+    }, {concurrency: 1})
+    // Wrap errors.
+    .catch(function(err) {
+      throw new VError(err, 'Error starting services.');
+    });
+
   };
 
-  var halt = function(callback) {
-    helpers.mapAsync(
-      serviceInfo.getStartableServices(),
-      function(service, done) {
-        stopService(service, done);
-      },
-      function(errs) {
-        callback(errs);
-      }
-    );
+  /*
+   * Stop all startable services.
+   */
+  var halt = function() {
+
+    // Get service info.
+    return serviceInfo()
+    // Get startable services.
+    .then(function(serviceInfo) {
+      return serviceInfo.getStartableServices();
+    })
+    // Stop each service one at a time.
+    // @todo: @bcauldwell - This should be a map all so an error doesn't
+    // stop any of the services from stopping.
+    .map(function(service) {
+      return stopService(service);
+    }, {concurrency: 1})
+    // Wrap errors.
+    .catch(function(err) {
+      throw new VError(err, 'Error stopping services.');
+    });
+    
   };
 
-  var rebootServices = function(callback) {
-    logInfo('SERVICES => Startup services need to be started.');
-    halt(function(err) {
-      start(function(err) {
-        callback(null);
+  /*
+   * Restart all startable services.
+   */
+  var rebootServices = function() {
+
+    // Log start.
+    log.info('Startup services need to be started.');
+
+    // Stop services.
+    return halt()
+    // Start services.
+    .then(function() {
+      return start();
+    });
+
+  };
+
+  /*
+   * Install services.
+   */
+  var install = function() {
+
+    // Get service info and bind to this.
+    return serviceInfo()
+    .bind({})
+    .then(function() {
+      this.serviceInfo = serviceInfo;
+    })
+    // Make sure cid directory exists.
+    .then(function() {
+      var cidRoot = this.serviceInfo.getCidRoot();
+      return Promise.fromNode(function(cb) {
+        mkdirp(cidRoot, cb);
       });
+    })
+    // Get list of services.
+    .then(function() {
+      return this.serviceInfo.getCoreImages();
+    })
+    // Install each service.
+    .map(installService, {concurrency: 1})
+    // Wrap errors.
+    .catch(function(err) {
+      throw new VError(err, 'Error installing services.');
     });
+
   };
 
-  var install = function(callback) {
-    var cidRoot = serviceInfo.getCidRoot();
-    if (!fs.existsSync(cidRoot)) {
-      mkdirp.sync(cidRoot);
-    }
-    helpers.mapAsync(
-      serviceInfo.getCoreImages(),
-      function(service, done) {
-        installService(service, done);
-      },
-      function(errs) {
-        callback(errs);
-      }
-    );
-  };
+  /*
+   * Verify services are in a good state.
+   */
+  var verify = function() {
 
-  var verify = function(callback) {
-    helpers.findAsync(
-      serviceInfo.getStartableServices(),
-      function(service, done) {
-        isNotRunning(service, done);
-      },
-      function(errs, result) {
-        if (errs) {
-          callback(errs);
-        }
-        else if (result) {
-          rebootServices(callback);
-        }
-        else {
-          callback(null);
-        }
+    // Get service info.
+    return serviceInfo()
+    // Get startable services.
+    .then(function(serviceInfo) {
+      return serviceInfo.getStartableServices();
+    })
+    // Filter out services that are running.
+    .filter(function(service) {
+      return isServiceRunning(service)
+      .then(function(isRunning) {
+        return !isRunning;
+      });
+    }, {concurrency: 1})
+    // If there are any services not running, restart them all.
+    .then(function(notRunningServices) {
+      if (notRunningServices.length > 0) {
+        return rebootServices();
       }
     );
+
   };
 
   return {
