@@ -26,10 +26,15 @@ module.exports = function(kbox) {
   /*
    * Initialize events and tasks.
    */
-  Promise.try(require, './index.js')
-  // Wrap errors.
-  .catch(function(err) {
-    throw new VError(err, 'Failed to init services plugin tasks and events.');
+  var init = _.once(function() {
+    // Load and initialize events and tasks.
+    return Promise.try(function() {
+      return require('./index.js')(kbox);
+    })
+    // Wrap errors.
+    .catch(function(err) {
+      throw new VError(err, 'Failed to init services plugin tasks and events.');
+    });
   });
 
   /*
@@ -270,6 +275,7 @@ module.exports = function(kbox) {
   };
 
   return {
+    init: init,
     install: install,
     verify: verify
   };
