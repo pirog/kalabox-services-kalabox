@@ -224,7 +224,7 @@ module.exports = function(kbox) {
     // Get service info and bind to this.
     return serviceInfo()
     .bind({})
-    .then(function() {
+    .then(function(serviceInfo) {
       this.serviceInfo = serviceInfo;
     })
     // Make sure cid directory exists.
