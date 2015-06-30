@@ -3,7 +3,7 @@ function createService(container) {
   return {
     Port: 80,
     Environment: arr[1],
-    TTL: defaultTTL,
+    TTL: '2147483647',
     Service: arr[0],
     Instance: removeSlash(container.Name).substring(3),
     Host: container.NetworkSettings.IpAddress
