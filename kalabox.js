@@ -242,6 +242,7 @@ module.exports = function(kbox) {
     .map(installService, {concurrency: 1})
     // Wrap errors.
     .catch(function(err) {
+      JSON.stringify(err);
       throw new VError(err, 'Error installing services.');
     });
 
