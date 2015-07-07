@@ -10,7 +10,7 @@ RUN \
   apt-get update -y && \
   curl -sL https://deb.nodesource.com/setup_0.12 | bash - && \
   apt-get install -y supervisor nodejs npm redis-server && \
-  npm install --prefix=/usr/local -g https://github.com/kalabox/hipache/tarball/0.3.1-2 --production && \
+  npm install --prefix=/usr/local -g https://github.com/kalabox/hipache/tarball/0.4.0-kbox --production && \
   mkdir -p /var/log/hipache && \
   apt-get -y clean && \
   apt-get -y autoclean && \
