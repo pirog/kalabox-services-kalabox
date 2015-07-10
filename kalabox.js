@@ -99,7 +99,9 @@ module.exports = function(kbox) {
     })
     // Wrap errors.
     .catch(function(err) {
-      throw new VError(err, 'Error installing service "%s".', service);
+      throw new VError(
+        err, 'Error installing service "%s".', JSON.stringify(service)
+      );
     });
 
   };
