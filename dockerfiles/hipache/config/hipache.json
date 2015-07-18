@@ -13,6 +13,12 @@
         "port": 80,
         "bind": ["0.0.0.0"]
     },
+    "https": {
+        "port": 443,
+        "bind": [ "0.0.0.0"],
+        "key": "/certs/hipache.key",
+        "cert": "/certs/hipache.crt"
+    },
     "user": "root",
     "group": "root",
     "driver": ["redis://127.0.0.1:8160"]

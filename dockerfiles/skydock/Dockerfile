@@ -6,11 +6,11 @@
 
 FROM kalabox/debian:stable
 
-COPY ./config/skydock.js /data/config/skydock.js
+COPY ./config/skydock.js /root/skydock.js
 
 RUN \
   curl -L https://github.com/kalabox/skydock/releases/download/v0.2.0/skydock > /skydock && \
   chmod 777 /skydock && \
-  chmod 777 /data/config/skydock.js
+  chmod 777 /root/skydock.js
 
 ENTRYPOINT ["/skydock", "-ttl", "2147483647", "-environment", "dev", "-beat", "5"]

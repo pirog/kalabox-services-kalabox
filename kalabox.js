@@ -99,7 +99,9 @@ module.exports = function(kbox) {
     })
     // Wrap errors.
     .catch(function(err) {
-      throw new VError(err, 'Error installing service "%s".', service);
+      throw new VError(
+        err, 'Error installing service "%s".', JSON.stringify(service)
+      );
     });
 
   };
@@ -242,6 +244,7 @@ module.exports = function(kbox) {
     .map(installService, {concurrency: 1})
     // Wrap errors.
     .catch(function(err) {
+      JSON.stringify(err);
       throw new VError(err, 'Error installing services.');
     });
 
