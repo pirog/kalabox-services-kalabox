@@ -84,17 +84,79 @@ module.exports = function(kbox) {
     // Create service.
     .then(function(serviceInfo) {
       if (service.createOpts) {
-        // Get install options.
-        var installOpts = serviceInfo.getInstallOptions(service);
-        // Create service.
-        return kbox.engine.create(installOpts)
-        // Write service's cid file.
-        .then(function(container) {
-          return Promise.fromNode(function(cb) {
-            var filepath = serviceInfo.getCidFile(service);
-            fs.writeFile(filepath, container.cid, cb);
+
+        /*
+         * Prepare the container for creation
+         */
+        var prepareContainer = function(cid) {
+
+          // Return if there is no cid
+          if (cid === false) {
+            return Promise.resolve(false);
+          }
+
+          // Check if our CID still exists
+          return kbox.engine.containerExists(cid)
+
+          // If the container exists check that it is running and if it is
+          // stop it, then destroy the container if it isn't a data container
+          .then(function(exists) {
+
+            // Containers exists
+            // @todo: clean up cid file if it doesnt?
+            if (exists) {
+              // Check if we are running
+              return isServiceRunning(service)
+              // Stop if running
+              .then(function(isRunning) {
+                if (isRunning) {
+                  return kbox.engine.stop(cid);
+                }
+              })
+              // Remove if not data container
+              .then(function() {
+                if (service.createOpts.name !== 'kalabox_data') {
+                  return kbox.engine.remove(cid);
+                }
+              });
+            }
+
           });
+        };
+
+        // Try to get the the CID
+        var cid = serviceInfo.getCid(service);
+
+        // Prepare the container if needed
+        return prepareContainer(cid)
+
+        // Create the container
+        .then(function() {
+          // In some cases we dont want to remove the container so check
+          // existence again
+          // Check if our CID still exists
+          return kbox.engine.containerExists(cid)
+
+          // Should be safe to create at this point
+          .then(function(exists) {
+            if (!exists) {
+              // Get install options.
+              var installOpts = serviceInfo.getInstallOptions(service);
+              // Check to see if we have a container that already exist
+              // Create service.
+              return kbox.engine.create(installOpts)
+              // Write service's cid file.
+              .then(function(container) {
+                return Promise.fromNode(function(cb) {
+                  var filepath = serviceInfo.getCidFile(service);
+                  fs.writeFile(filepath, container.cid, cb);
+                });
+              });
+            }
+          });
+
         });
+
       }
     })
     // Wrap errors.
