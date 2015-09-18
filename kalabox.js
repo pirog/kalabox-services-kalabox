@@ -107,6 +107,95 @@ module.exports = function(kbox) {
   };
 
   /*
+   * Rebuild service.
+   */
+  var rebuildService = function(service) {
+
+    // Bind in our helper module
+    return serviceInfo()
+    .bind({})
+    .then(function(serviceInfo) {
+      this.serviceInfo = serviceInfo;
+      return serviceInfo.getCid(service);
+    })
+
+    // If we have a CID try to reset the container
+    .then(function(cid) {
+      if (cid !== false) {
+        // Check if our CID still exists
+        return kbox.engine.containerExists(cid)
+
+        // If the container exists check that it is running and if it is
+        // stop it, then destroy the container if it isn't a data container
+        .then(function(exists) {
+
+          // Containers exists
+          // @todo: clean up cid file if it doesnt?
+          if (exists) {
+            // Check if we are running
+            return isServiceRunning(service)
+            // Stop if running
+            .then(function(isRunning) {
+              if (isRunning) {
+                return kbox.engine.stop(cid);
+              }
+            })
+            // Remove if not data container
+            .then(function() {
+              if (service.createOpts.name !== 'kalabox_data') {
+                return kbox.engine.remove(cid);
+              }
+            });
+          }
+
+        });
+      }
+    })
+
+    // Create the container
+    .then(function() {
+
+      // In some cases we dont want to remove the container so check
+      // existence again
+      // Check if our CID still exists
+      var self = this;
+      return kbox.engine.containerExists(self.serviceInfo.getCid(service))
+
+      // Should be safe to create at this point
+      .then(function(exists) {
+
+        if (!exists) {
+
+          // Get install options.
+          var installOpts = self.serviceInfo.getInstallOptions(service);
+
+          // Create service.
+          return kbox.engine.create(installOpts)
+
+          // Write service's cid file.
+          .then(function(container) {
+            return Promise.fromNode(function(cb) {
+              var filepath = self.serviceInfo.getCidFile(service);
+              fs.writeFile(filepath, container.cid, cb);
+            });
+          });
+
+        }
+
+      });
+
+    })
+
+    // Wrap errors.
+    .catch(function(err) {
+      throw new VError(
+        err, 'Error rebuilding service "%s".', JSON.stringify(service)
+      );
+    });
+
+  };
+
+  /*
    * Start a service.
    */
   var startService = function(service) {
@@ -251,6 +340,38 @@ module.exports = function(kbox) {
   };
 
   /*
+   * Rebuild services.
+   */
+  var rebuild = function() {
+
+    // Get service info and bind to this.
+    return serviceInfo()
+    .bind({})
+    .then(function(serviceInfo) {
+      this.serviceInfo = serviceInfo;
+    })
+    // Make sure cid directory exists.
+    .then(function() {
+      var cidRoot = this.serviceInfo.getCidRoot();
+      return Promise.fromNode(function(cb) {
+        mkdirp(cidRoot, cb);
+      });
+    })
+    // Get list of services.
+    .then(function() {
+      return this.serviceInfo.getStartableServices();
+    })
+    // Install each service.
+    .map(rebuildService, {concurrency: 1})
+    // Wrap errors.
+    .catch(function(err) {
+      JSON.stringify(err);
+      throw new VError(err, 'Error rebuilding services.');
+    });
+
+  };
+
+  /*
    * Verify services are in a good state.
    */
   var verify = function() {
@@ -280,6 +401,7 @@ module.exports = function(kbox) {
   return {
     init: init,
     install: install,
+    rebuild: rebuild,
     verify: verify
   };
 
