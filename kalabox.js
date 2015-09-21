@@ -386,7 +386,7 @@ module.exports = function(kbox) {
     .filter(function(service) {
       return isServiceRunning(service)
       .then(function(isRunning) {
-        return !isRunning;
+        return !isRunning && service.name !== 'data';
       });
     }, {concurrency: 1})
     // If there are any services not running, restart them all.
