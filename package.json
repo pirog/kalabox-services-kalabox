@@ -22,8 +22,7 @@
     "hiredis": "^0.4.1",
     "lodash": "^3.7.0",
     "mkdirp": "^0.5.0",
-    "redis": "^1.0.0",
-    "windosu": "https://github.com/kalabox/windosu/tarball/master"
+    "redis": "^1.0.0"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
