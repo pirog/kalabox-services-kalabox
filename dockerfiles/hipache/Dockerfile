@@ -2,16 +2,17 @@
 
 FROM kalabox/debian:stable
 
-ENV DEBIAN_FRONTEND noninteractive
-
-VOLUME ["/var/lib/redis"]
-
 RUN \
   apt-get update -y && \
   curl -sL https://deb.nodesource.com/setup_0.12 | bash - && \
-  apt-get install -y supervisor nodejs npm redis-server && \
+  apt-get install -y supervisor nodejs npm && \
   npm install --prefix=/usr/local -g https://github.com/kalabox/hipache/tarball/0.4.2-kbox --production && \
   mkdir -p /var/log/hipache && \
+  apt-get -y install build-essential tcl8.5 && \
+  cd /tmp && curl -O http://download.redis.io/releases/redis-2.8.18.tar.gz && \
+  tar xzf redis-2.8.18.tar.gz && cd redis-2.8.18 && \
+  make && make install && \
+  apt-get -y purge --auto-remove build-essential tcl8.5 && \
   apt-get -y clean && \
   apt-get -y autoclean && \
   apt-get -y autoremove && \
@@ -30,5 +31,7 @@ ENV NODE_ENV production
 EXPOSE 80
 EXPOSE 443
 EXPOSE 8160
+
+VOLUME ["/var/lib/redis"]
 
 CMD ["supervisord", "-n"]
