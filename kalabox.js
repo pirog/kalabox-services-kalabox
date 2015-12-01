@@ -5,18 +5,14 @@
  * @module kbox
  */
 
-var _ = require('lodash');
-var Promise = require('bluebird');
-Promise.longStackTraces();
-var path = require('path');
-var fs = require('fs');
-var mkdirp = require('mkdirp');
-var VError = require('verror');
-var pp = require('util').inspect;
-
 module.exports = function(kbox) {
 
-  var self = this;
+  var _ = require('lodash');
+  var Promise = kbox.Promise;
+  var fs = require('fs');
+  var mkdirp = require('mkdirp');
+  var VError = require('verror');
+  var pp = require('util').inspect;
 
   /*
    * Logging functions.
