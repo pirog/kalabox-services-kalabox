@@ -18,10 +18,9 @@
     "email": "mike@kalamuna.com"
   },
   "dependencies": {
-    "hiredis": "^0.4.1",
     "lodash": "^3.7.0",
     "mkdirp": "^0.5.0",
-    "redis": "^1.0.0"
+    "redis": "https://github.com/kalabox/node_redis/tarball/master"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
